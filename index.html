@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>NOID · Demos AR</title>
+  <style>
+    :root { --bg: #f6f4ef; --surface: #ffffff; --text: #1f1d1a; --muted: #625d55; --line: #dcd6cc; --accent: #c4581b; color-scheme: light; }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) { --bg: #161513; --surface: #211f1c; --text: #f1ede6; --muted: #aaa398; --line: #3a3732; --accent: #f08a4b; color-scheme: dark; }
+    }
+    :root[data-theme="dark"] { --bg: #161513; --surface: #211f1c; --text: #f1ede6; --muted: #aaa398; --line: #3a3732; --accent: #f08a4b; color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 640px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { font-size: 1.6rem; margin: 0 0 6px; }
+    p { margin: 0 0 16px; color: var(--muted); }
+    a.card { display: block; padding: 16px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); color: var(--text); text-decoration: none; }
+    a.card:hover, a.card:focus-visible { border-color: var(--accent); }
+    a.card b { display: block; font-size: 1.1rem; }
+    a.card span { color: var(--muted); }
+  </style>
+</head>
+<body>
+<main>
+  <h1>NOID · Demos de realidad aumentada</h1>
+  <p>Páginas de prueba. Ábrelas en Chrome (Android) o Safari (iPhone).</p>
+  <a class="card" href="prueba-escala/">
+    <b>Prueba de escala en la mesa</b>
+    <span>Tablero de 30 × 20 cm y plato de 26 cm para comprobar el tamaño real.</span>
+  </a>
+</main>
+</body>
+</html>

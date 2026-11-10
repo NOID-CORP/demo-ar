@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Prueba de escala AR</title>
+  <meta name="description" content="Comprueba si un objeto virtual aparece a tamaño real sobre la mesa antes de escanear platos.">
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f4ef; --surface: #ffffff; --text: #1f1d1a; --muted: #625d55; --line: #dcd6cc;
+      --accent: #c4581b; --accent-text: #ffffff; --ok: #1f7a4d; --bad: #b3261e; --warn-bg: #fff4e5; --warn-text: #7a4300;
+      color-scheme: light;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #161513; --surface: #211f1c; --text: #f1ede6; --muted: #aaa398; --line: #3a3732;
+        --accent: #f08a4b; --accent-text: #1a0d05; --ok: #6fcf97; --bad: #ff8a80; --warn-bg: #3a2a12; --warn-text: #ffd59e;
+        color-scheme: dark;
+      }
+    }
+    :root[data-theme="dark"] {
+      --bg: #161513; --surface: #211f1c; --text: #f1ede6; --muted: #aaa398; --line: #3a3732;
+      --accent: #f08a4b; --accent-text: #1a0d05; --ok: #6fcf97; --bad: #ff8a80; --warn-bg: #3a2a12; --warn-text: #ffd59e;
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 720px; margin: 0 auto; padding: 20px 16px 48px; }
+    h1 { font-size: 1.5rem; line-height: 1.2; margin: 0 0 6px; }
+    h2 { font-size: 1.1rem; margin: 28px 0 10px; }
+    p { margin: 0 0 10px; }
+    .muted { color: var(--muted); }
+    .badge { display: inline-block; font-size: .8rem; padding: 3px 10px; border-radius: 999px; background: var(--warn-bg); color: var(--warn-text); margin-bottom: 14px; }
+    .switch { display: flex; gap: 8px; margin: 14px 0 12px; }
+    .switch button { flex: 1; min-height: 44px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; cursor: pointer; }
+    .switch button[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+    .viewer { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    model-viewer { width: 100%; height: min(62vh, 440px); background: transparent; --poster-color: transparent; }
+    .ar-btn { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); min-height: 48px; padding: 0 22px; border: 0; border-radius: 999px; background: var(--accent); color: var(--accent-text); font: inherit; font-weight: 700; box-shadow: 0 2px 10px rgb(0 0 0 / .2); cursor: pointer; }
+    .facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
+    .fact { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+    .fact b { display: block; font-size: 1.05rem; }
+    .fact span { font-size: .85rem; color: var(--muted); }
+    .notice { margin-top: 12px; padding: 10px 12px; border-radius: 10px; background: var(--warn-bg); color: var(--warn-text); font-size: .95rem; }
+    .notice[hidden] { display: none; }
+    ol { padding-left: 22px; margin: 0; }
+    li { margin-bottom: 8px; }
+    .grid { display: grid; gap: 10px; }
+    label { display: grid; gap: 4px; font-size: .92rem; font-weight: 600; }
+    input, select { width: 100%; min-height: 44px; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-weight: 400; }
+    .measure { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: end; }
+    .verdict { min-width: 92px; min-height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: .9rem; font-weight: 700; border: 1px solid var(--line); color: var(--muted); }
+    .verdict.ok { color: var(--ok); border-color: var(--ok); }
+    .verdict.bad { color: var(--bad); border-color: var(--bad); }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .actions button, .actions a { min-height: 44px; padding: 0 16px; display: inline-flex; align-items: center; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-weight: 600; text-decoration: none; cursor: pointer; }
+    #copy-status { white-space: pre-line; }
+    footer { margin-top: 32px; font-size: .85rem; color: var(--muted); }
+    @media (min-width: 560px) { .grid.two { grid-template-columns: 1fr 1fr; } }
+  </style>
+</head>
+<body>
+<main>
+  <span class="badge">Prueba técnica · objetos de calibración, no platos del menú</span>
+  <h1>¿Aparece a tamaño real en la mesa?</h1>
+  <p class="muted">Antes de escanear comida, comprobamos que el teléfono coloca un objeto de medida conocida sin agrandarlo ni encogerlo.</p>
+
+  <div class="switch" role="group" aria-label="Objeto de prueba">
+    <button type="button" data-model="tablero-escala" aria-pressed="true">Tablero 30 × 20 cm</button>
+    <button type="button" data-model="plato-26cm" aria-pressed="false">Plato 26 cm</button>
+  </div>
+
+  <div class="viewer">
+    <model-viewer id="viewer"
+      src="modelos/tablero-escala.glb" ios-src="modelos/tablero-escala.usdz"
+      alt="Tablero de 30 por 20 centímetros con cuadrícula y un cubo naranja de 10 centímetros"
+      ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+      camera-controls touch-action="pan-y" shadow-intensity="0.8" environment-image="neutral"
+      camera-orbit="35deg 60deg auto">
+      <button slot="ar-button" class="ar-btn" type="button">Ver en mi mesa</button>
+    </model-viewer>
+  </div>
+
+  <div class="facts">
+    <div class="fact"><span>Medida declarada</span><b id="declared">30 × 20 cm · alto 10,3 cm</b></div>
+    <div class="fact"><span>Medida que lee el visor</span><b id="measured">Cargando…</b></div>
+  </div>
+  <p class="notice" id="ar-notice" hidden></p>
+
+  <h2>Cómo hacer la prueba</h2>
+  <ol>
+    <li>En la mesa real, deja una regla o cinta métrica. Para el plato, pon al lado un plato real de 26 cm.</li>
+    <li>Pulsa <b>Ver en mi mesa</b> y mueve el teléfono despacio hasta que detecte la superficie. Coloca el objeto junto a la regla.</li>
+    <li><b>No pellizques el objeto.</b> En iPhone, si aparece un porcentaje distinto de 100&nbsp;%, la escala cambió: vuelve a abrirlo.</li>
+    <li>Mide desde arriba y desde dos lados: largo del tablero, alto del cubo o diámetro del plato.</li>
+    <li>Rodea la mesa durante 30 segundos y observa si el objeto se queda quieto o se desliza.</li>
+  </ol>
+  <p class="muted">Aceptamos provisionalmente una diferencia de hasta ±5&nbsp;%. Mide con la vista perpendicular a la regla; mirar en diagonal agranda o achica la lectura.</p>
+
+  <h2>Anota lo que mediste</h2>
+  <div class="grid two">
+    <label>Teléfono y navegador<input id="f-device" autocomplete="off" placeholder="Ej.: iPhone 13, Safari"></label>
+    <label>Mesa y luz<input id="f-table" autocomplete="off" placeholder="Ej.: madera mate, luz de tarde"></label>
+  </div>
+  <div class="grid" style="margin-top:10px">
+    <div class="measure"><label>Largo del tablero (cm) · esperado 30<input id="m-board" inputmode="decimal" data-expected="30"></label><output class="verdict" for="m-board">—</output></div>
+    <div class="measure"><label>Alto del cubo (cm) · esperado 10<input id="m-cube" inputmode="decimal" data-expected="10"></label><output class="verdict" for="m-cube">—</output></div>
+    <div class="measure"><label>Diámetro del plato (cm) · esperado 26<input id="m-plate" inputmode="decimal" data-expected="26"></label><output class="verdict" for="m-plate">—</output></div>
+    <div class="grid two">
+      <label>Segundos hasta ver el objeto<input id="f-seconds" inputmode="decimal" placeholder="Desde «Ver en mi mesa»"></label>
+      <label>Al rodear la mesa
+        <select id="f-stable">
+          <option value="">Sin anotar</option>
+          <option>Se queda quieto</option>
+          <option>Se mueve un poco</option>
+          <option>Se desliza o salta</option>
+        </select>
+      </label>
+    </div>
+  </div>
+  <div class="actions">
+    <button type="button" id="copy">Copiar resultados</button>
+    <button type="button" id="clear">Borrar</button>
+  </div>
+  <p class="muted" id="copy-status" role="status"></p>
+
+  <h2>Archivos</h2>
+  <p class="muted">En iPhone, si el botón no abre la cámara, prueba el USDZ: abre la vista AR de Apple. En Android la AR se abre desde el botón; el GLB es el archivo 3D para revisarlo en otros visores.</p>
+  <div class="actions">
+    <a id="link-usdz" rel="ar" href="modelos/tablero-escala.usdz">USDZ para iPhone</a>
+    <a id="link-glb" href="modelos/tablero-escala.glb" download>Archivo GLB</a>
+  </div>
+
+  <footer>Los datos anotados se guardan solo en este navegador. La prueba comprueba escala y estabilidad; no demuestra la calidad de un escaneo de comida ni su efecto en las ventas.</footer>
+</main>
+
+<script type="module">
+  const MODELS = {
+    'tablero-escala': {
+      declared: '30 × 20 cm · alto 10,3 cm', expected: [30, 10.3, 20],
+      alt: 'Tablero de 30 por 20 centímetros con cuadrícula y un cubo naranja de 10 centímetros'
+    },
+    'plato-26cm': {
+      declared: '26 cm de diámetro · alto 2,1 cm', expected: [26, 2.1, 26],
+      alt: 'Plato azul de 26 centímetros de diámetro'
+    }
+  };
+  const viewer = document.getElementById('viewer');
+  const measured = document.getElementById('measured');
+  const notice = document.getElementById('ar-notice');
+  const fmt = n => n.toLocaleString('es-CO', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  let current = 'tablero-escala';
+
+  function showNotice(text) { notice.textContent = text; notice.hidden = !text; }
+
+  function select(id) {
+    current = id;
+    const model = MODELS[id];
+    document.querySelectorAll('[data-model]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.model === id)));
+    document.getElementById('declared').textContent = model.declared;
+    measured.textContent = 'Cargando…';
+    viewer.setAttribute('ios-src', `modelos/${id}.usdz`);
+    viewer.setAttribute('src', `modelos/${id}.glb`);
+    viewer.setAttribute('alt', model.alt);
+    document.getElementById('link-usdz').href = `modelos/${id}.usdz`;
+    document.getElementById('link-glb').href = `modelos/${id}.glb`;
+  }
+  document.querySelectorAll('[data-model]').forEach(b => b.addEventListener('click', () => select(b.dataset.model)));
+
+  const loadTimeout = setTimeout(() => {
+    if (!customElements.get('model-viewer')) {
+      measured.textContent = 'Sin visor';
+      showNotice('No se pudo cargar el visor 3D. Revisa la conexión a Internet; los archivos directos de abajo siguen disponibles.');
+    }
+  }, 8000);
+
+  customElements.whenDefined('model-viewer').then(() => {
+    clearTimeout(loadTimeout);
+    viewer.addEventListener('load', () => {
+      const d = viewer.getDimensions();
+      const size = [d.x, d.y, d.z].map(v => v * 100);
+      const [ex, ey, ez] = MODELS[current].expected;
+      const ok = Math.abs(size[0] - ex) < 0.1 && Math.abs(size[1] - ey) < 0.1 && Math.abs(size[2] - ez) < 0.1;
+      measured.textContent = current === 'plato-26cm'
+        ? `${fmt(size[0])} cm · alto ${fmt(size[1])} cm ${ok ? '✓' : '✗'}`
+        : `${fmt(size[0])} × ${fmt(size[2])} cm · alto ${fmt(size[1])} cm ${ok ? '✓' : '✗'}`;
+      if (!viewer.canActivateAR) {
+        const inApp = /WhatsApp|Instagram|FBAN|FBAV|FB_IAB/i.test(navigator.userAgent);
+        showNotice(inApp
+          ? 'Lo abriste dentro de WhatsApp o Instagram. Usa «Abrir en el navegador» (Safari en iPhone, Chrome en Android) para ver el objeto en la mesa.'
+          : 'Este navegador o dispositivo no ofrece realidad aumentada. Puedes girar el modelo aquí; para la prueba usa un teléfono con Safari (iPhone) o Chrome (Android).');
+      } else showNotice('');
+    });
+    viewer.addEventListener('ar-status', event => {
+      if (event.detail.status === 'failed') showNotice('No se pudo iniciar la realidad aumentada en este teléfono. Prueba el archivo directo de abajo.');
+    });
+    viewer.addEventListener('error', () => { measured.textContent = 'Error'; showNotice('No se pudo cargar el modelo.'); });
+  });
+
+  // Registro local de mediciones
+  const KEY = 'noid.ar-escala.v1';
+  const fields = ['f-device', 'f-table', 'm-board', 'm-cube', 'm-plate', 'f-seconds', 'f-stable'];
+  const el = id => document.getElementById(id);
+  function verdict(input) {
+    const out = document.querySelector(`output[for="${input.id}"]`);
+    const value = Number(String(input.value).replace(',', '.'));
+    out.className = 'verdict';
+    if (!input.value.trim() || !Number.isFinite(value) || value <= 0) { out.textContent = '—'; return ''; }
+    const expected = Number(input.dataset.expected);
+    const diff = ((value - expected) / expected) * 100;
+    const pass = Math.abs(diff) <= 5;
+    out.classList.add(pass ? 'ok' : 'bad');
+    out.textContent = `${diff > 0 ? '+' : ''}${fmt(diff)} %`;
+    return `${fmt(value)} cm (esperado ${expected}; ${diff > 0 ? '+' : ''}${fmt(diff)} %, ${pass ? 'dentro' : 'fuera'} de ±5 %)`;
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(fields.map(id => [id, el(id).value])))); } catch {}
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY) || '{}');
+    fields.forEach(id => { if (typeof saved[id] === 'string') el(id).value = saved[id]; });
+  } catch {}
+  document.querySelectorAll('[data-expected]').forEach(input => { verdict(input); input.addEventListener('input', () => verdict(input)); });
+  fields.forEach(id => el(id).addEventListener('input', save));
+  fields.forEach(id => el(id).addEventListener('change', save));
+
+  el('copy').addEventListener('click', async () => {
+    const line = (label, value) => value ? `${label}: ${value}` : '';
+    const text = ['Prueba de escala AR · NOID',
+      line('Teléfono', el('f-device').value), line('Mesa y luz', el('f-table').value),
+      line('Tablero', verdict(el('m-board'))), line('Cubo', verdict(el('m-cube'))), line('Plato', verdict(el('m-plate'))),
+      line('Segundos hasta ver el objeto', el('f-seconds').value), line('Estabilidad', el('f-stable').value)
+    ].filter(Boolean).join('\n');
+    try { await navigator.clipboard.writeText(text); el('copy-status').textContent = 'Copiado. Pégalo en tus notas o en un chat.'; }
+    catch { el('copy-status').textContent = text; }
+  });
+  el('clear').addEventListener('click', () => {
+    fields.forEach(id => { el(id).value = ''; });
+    document.querySelectorAll('[data-expected]').forEach(verdict);
+    try { localStorage.removeItem(KEY); } catch {}
+    el('copy-status').textContent = '';
+  });
+</script>
+</body>
+</html>
