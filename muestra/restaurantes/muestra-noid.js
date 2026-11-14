@@ -11,6 +11,13 @@
 //    escaneos. Referencia más débil: margen ±3 cm.
 // Cuando alguien mida los platos (un lado, de borde a borde), repite la limpieza
 // con --plato-cm y cambia las medidas aquí.
+//
+// Almuerzo casero: escaneado el mismo día con KIRI Pro y «Auto Object Masking».
+// La comida tiene mucho más detalle, pero KIRI quitó el plato y cerró la base con
+// una forma inventada: se cortó el 40 % inferior y se puso un plato blanco genérico
+// de 28,6 cm modelado en Blender (`platoGenerico`, la carta lo dice). La comida se
+// escaló a 20 cm de largo sin referencia: medida estimada. Cosmo no lo ofrece
+// (`mesero: false`) porque su voz está grabada solo para los otros dos platos.
 
 export default {
   id: 'muestra-noid',
@@ -69,6 +76,19 @@ export default {
         usdz: 'modelos/muestra-noid/escaneos/plato-gourmet.usdz',
         medidas: { ancho: 20, fondo: 19.9, alto: 4.6 },
         medidaAproximada: true,
+      },
+    },
+    {
+      id: 'almuerzo', nombre: 'Almuerzo casero', categoria: 'escaneado',
+      imagen: 'media/muestra-noid/almuerzo.jpg', insignia: 'Escaneo real',
+      descripcion: 'Pollo con arroz, tajadas de maduro y yuca.',
+      mesero: false,
+      escaneo: {
+        glb: 'modelos/muestra-noid/escaneos/almuerzo.glb',
+        usdz: 'modelos/muestra-noid/escaneos/almuerzo.usdz',
+        medidas: { ancho: 28.7, fondo: 28.7, alto: 6.2 },
+        medidaAproximada: true,
+        platoGenerico: true,
       },
     },
   ],

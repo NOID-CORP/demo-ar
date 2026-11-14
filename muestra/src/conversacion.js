@@ -118,9 +118,14 @@ export function partirFrases(texto) {
   return (String(texto).match(/[^.!?]*[.!?]+|[^.!?]+$/g) ?? []).map((f) => f.trim()).filter(Boolean);
 }
 
+/** Platos que Cosmo puede poner en la mesa: los que tienen 3D, salvo los marcados `mesero: false`. */
+export function platosDelMesero(config) {
+  return config.productos.filter((p) => (p.escaneo || p.receta || p.vaso) && p.mesero !== false);
+}
+
 /** Todas las frases que Cosmo puede decir con esta carta, para grabarlas. */
 export function frasesPosibles(config) {
-  const platos = config.productos.filter((p) => p.escaneo || p.receta || p.vaso);
+  const platos = platosDelMesero(config);
   const textos = [config.asistente?.saludo ?? '¡Hola! ¿Qué se te antoja hoy?'];
   for (const valor of Object.values(FRASES)) if (typeof valor === 'string') textos.push(valor);
   for (const como of new Set(PERSONAS.map(([, c]) => c))) textos.push(FRASES.paraPersonaEspecial(como), FRASES.paraPersona(como));
@@ -133,7 +138,7 @@ export function frasesPosibles(config) {
 }
 
 export function crearConversacion(config) {
-  const platos = config.productos.filter((p) => p.escaneo || p.receta || p.vaso);
+  const platos = platosDelMesero(config);
   const porId = new Map(platos.map((p) => [p.id, p]));
   const orden = [config.destacado, ...platos.map((p) => p.id)].filter((id, i, a) => id && porId.has(id) && a.indexOf(id) === i);
   let s;

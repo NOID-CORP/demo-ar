@@ -45,9 +45,13 @@ function modelo(p, sabor = null) {
 
 const hayEscaneos = config.productos.some((p) => p.escaneo);
 const hayPrevias = config.productos.some((p) => !p.escaneo && modelo(p));
+// `platoGenerico`: la comida es escaneada, pero el escaneo no capturó el plato y se puso uno de muestra.
+const hayGenericos = config.productos.some((p) => p.escaneo?.platoGenerico);
 $('#pie-origen').textContent = !hayEscaneos
   ? 'Por ahora son vistas previas: al escanear cada plato verás exactamente el que te sirven.'
-  : hayPrevias ? 'Los marcados «Escaneado» son el plato real; el resto, una vista previa.' : 'Todos son el plato real escaneado.';
+  : hayPrevias ? 'Los marcados «Escaneado» son el plato real; el resto, una vista previa.'
+    : hayGenericos ? 'Toda la comida es real y escaneada; alguna va en un plato genérico porque el escaneo no capturó el original.'
+      : 'Todos son el plato real escaneado.';
 
 function textoMedidas(m) {
   if (!m?.principal) return '';
@@ -214,9 +218,11 @@ function abrirPlato(p, sabor = null) {
   $('#visor-nombre').textContent = p.nombre;
   $('#visor-precio').textContent = pesos(p.precio);
   $('#visor-medidas').textContent = textoMedidas(m);
-  $('#visor-origen').innerHTML = m.escaneado
-    ? `<b>Escaneado del plato real.</b> ${m.medidaAproximada ? 'El tamaño es una estimación: falta medir el plato.' : 'Así llega a tu mesa.'}`
-    : '<b>Vista previa en 3D.</b> Cuando escaneemos este plato verás exactamente el que te sirven.';
+  $('#visor-origen').innerHTML = !m.escaneado
+    ? '<b>Vista previa en 3D.</b> Cuando escaneemos este plato verás exactamente el que te sirven.'
+    : m.platoGenerico
+      ? `<b>Comida escaneada de verdad, en un plato genérico.</b> El escaneo no capturó el plato original${m.medidaAproximada ? ' y el tamaño es una estimación.' : '.'}`
+      : `<b>Escaneado del plato real.</b> ${m.medidaAproximada ? 'El tamaño es una estimación: falta medir el plato.' : 'Así llega a tu mesa.'}`;
   $('#visor-descripcion').textContent = [p.descripcion, p.receta ? config.textos.incluye : ''].filter(Boolean).join(' ');
   const sabores = $('#visor-sabores');
   sabores.innerHTML = (p.sabores ?? []).map((s) => `<button type="button" class="sabor" style="--liquido:${escapar(s.color)}" aria-pressed="${s.nombre === elegido}" data-sabor="${escapar(s.nombre)}"><i></i>${escapar(s.nombre)}</button>`).join('');
