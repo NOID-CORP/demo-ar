@@ -3,9 +3,10 @@
 // mesa» la AR del teléfono lo pone a tamaño real. En Chrome para Android (WebXR)
 // la conversación sigue sobre la cámara y el plato cambia en la mesa.
 
-import { crearConversacion } from './conversacion.js';
+import { crearConversacion, FRASES } from './conversacion.js';
 import { crearMascota } from './mascota.js';
 import { crearVoz } from './voz.js';
+import { crearVozGrabada } from './vozGrabada.js';
 import { centimetros } from './formato.js';
 
 const $ = (s) => document.querySelector(s);
@@ -33,6 +34,8 @@ $('#enlace-carta').href = `${location.pathname.endsWith('mesero.html') ? 'index.
 const mv = $('#mv');
 const conversacion = crearConversacion(config);
 const voz = crearVoz('es-CO');
+// Voz de ElevenLabs grabada de antemano; si no hay audios, la del teléfono.
+const vozGrabada = await crearVozGrabada(`media/${config.id}/voz/`);
 const cosmo = crearMascota($('#cosmo'), { colores: marca.colores, estilo: config.asistente?.estilo });
 crearMascota($('#portada-cosmo'), { colores: marca.colores, estilo: config.asistente?.estilo }).estado('saluda');
 $('#btn-voz').innerHTML = VOZ_SI;
@@ -75,10 +78,19 @@ function decir(texto) {
     if (n < total) requestAnimationFrame(paso);
   };
   requestAnimationFrame(paso);
-  const hablo = voz.hablar(texto, {
+  const avisos = {
     alIniciar: () => { if (id === turno) cosmo.hablando(true); },
     alTerminar: () => { if (id === turno) cosmo.hablando(false); },
-  });
+  };
+  vozGrabada?.callar();
+  let hablo = false;
+  if (voz.estaActiva() && vozGrabada?.cubre(texto)) {
+    voz.callar();
+    vozGrabada.hablar(texto, avisos);
+    hablo = true;
+  } else {
+    hablo = voz.hablar(texto, avisos);
+  }
   if (!hablo) {
     cosmo.hablando(true);
     setTimeout(() => { if (id === turno) cosmo.hablando(false); }, Math.min(4500, (total / 50) * 1000));
@@ -220,7 +232,7 @@ mv.addEventListener('beforexrselect', (e) => {
 let intentoAR = 0;
 $('#btn-ar').addEventListener('click', () => { intentoAR = Date.now(); }, true);
 mv.addEventListener('ar-status', (e) => {
-  if (e.detail.status === 'session-started') decir('¡Ahí está, sobre tu mesa! Muévete alrededor para verlo. Puedes seguir hablándome.');
+  if (e.detail.status === 'session-started') decir(FRASES.enLaMesa);
   if (e.detail.status === 'failed' && Date.now() - intentoAR < 20000) avisar('No se pudo abrir la cámara. Revisa los permisos e inténtalo de nuevo.');
 });
 
@@ -250,6 +262,7 @@ micro.addEventListener('click', () => {
   escuchando = true;
   turno++;
   voz.callar();
+  vozGrabada?.callar();
   cosmo.hablando(false);
   cosmo.estado('escuchando');
   micro.classList.add('escuchando');
@@ -279,6 +292,7 @@ $('#escribir').addEventListener('submit', (e) => {
 $('#btn-voz').addEventListener('click', () => {
   const activa = !voz.estaActiva();
   voz.activar(activa);
+  if (!activa) vozGrabada?.callar();
   if (!activa) cosmo.hablando(false);
   $('#btn-voz').innerHTML = activa ? VOZ_SI : VOZ_NO;
   $('#btn-voz').setAttribute('aria-pressed', String(!activa));
@@ -288,6 +302,8 @@ $('#btn-voz').addEventListener('click', () => {
 // ── Inicio ─────────────────────────────────────────────────────────
 function empezar() {
   voz.desbloquear();
+  vozGrabada?.desbloquear();
+  vozGrabada?.precargar();
   const portada = $('#portada');
   portada.classList.add('saliendo');
   setTimeout(() => { portada.hidden = true; }, 400);
