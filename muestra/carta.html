@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#1d1046">
+  <title>Carta AR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js" defer></script>
+</head>
+<body>
+  <header class="cabecera">
+    <img id="logo" class="logo" alt="">
+    <div class="cabecera-texto"><strong id="nombre"></strong><span id="lema"></span></div>
+  </header>
+
+  <section class="portada" aria-labelledby="portada-titulo">
+    <div class="portada-texto">
+      <span class="sello"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Realidad aumentada</span>
+      <h1 id="portada-titulo">Mira tu plato en la mesa antes de pedirlo</h1>
+      <p>Toca <b>«Ver en mi mesa»</b> y la cámara de tu celular lo pone a tamaño real donde estés: en el local o en tu casa. Sin instalar nada.</p>
+    </div>
+    <div class="portada-visor">
+      <model-viewer id="destacado" class="visor-3d" loading="eager" camera-controls auto-rotate rotation-per-second="18deg"
+        interaction-prompt="none" touch-action="pan-y" shadow-intensity="1" shadow-softness="0.9" exposure="1.05"
+        camera-orbit="25deg 62deg auto" ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor">
+        <button slot="ar-button" class="boton-ar" type="button"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Ver en mi mesa</button>
+      </model-viewer>
+      <button id="destacado-info" class="destacado-info" type="button"></button>
+    </div>
+  </section>
+
+  <nav id="pestanas" class="pestanas" aria-label="Categorías"></nav>
+  <main id="carta" class="carta"></main>
+
+  <footer class="pie">
+    <p id="pie-incluye"></p>
+    <p>Los platos con <span class="marca-3d">3D</span> se pueden ver en tu mesa. <span id="pie-origen"></span></p>
+    <p class="pie-noid">Carta en realidad aumentada · NOID</p>
+  </footer>
+
+  <div id="barra-comparar" class="barra-comparar" hidden>
+    <div class="barra-texto"><strong>Comparar</strong><span></span></div>
+    <button id="btn-ver-comparacion" class="boton-principal" type="button">Ver juntas</button>
+    <button id="btn-limpiar-comparacion" class="boton-icono" type="button" aria-label="Quitar la comparación"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+  </div>
+
+  <section id="visor" class="visor" role="dialog" aria-modal="true" aria-labelledby="visor-nombre" hidden>
+    <header class="visor-cabecera">
+      <button id="btn-cerrar" class="boton-icono" type="button" aria-label="Volver a la carta"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+      <div class="visor-titulo"><span id="visor-insignia" class="insignia"></span><h2 id="visor-nombre"></h2></div>
+      <strong id="visor-precio" class="precio"></strong>
+    </header>
+    <model-viewer id="mv" class="visor-3d" camera-controls auto-rotate rotation-per-second="14deg" interaction-prompt="none"
+      touch-action="pan-y" shadow-intensity="1" shadow-softness="0.9" exposure="1.05" camera-orbit="25deg 62deg auto"
+      ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor">
+      <button slot="ar-button" class="boton-ar grande" type="button"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Ver en mi mesa · tamaño real</button>
+      <div id="cargando" class="cargando" hidden><span></span>Preparando…</div>
+    </model-viewer>
+    <div class="visor-panel">
+      <p id="visor-medidas" class="medidas"></p>
+      <div id="visor-sabores" class="sabores" role="group" aria-label="Sabor"></div>
+      <p id="visor-origen" class="origen"></p>
+      <p id="visor-descripcion" class="descripcion"></p>
+      <div id="sin-ar" class="sin-ar" hidden>
+        <div id="qr" class="qr" aria-hidden="true"></div>
+        <p id="sin-ar-texto"></p>
+      </div>
+      <button id="btn-comparar-con" class="boton-secundario" type="button">Comparar con otro plato</button>
+    </div>
+  </section>
+
+  <div id="aviso" class="aviso" role="status" hidden></div>
+  <script type="module" src="src/menu.js"></script>
+</body>
+</html>

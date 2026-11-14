@@ -1,0 +1,175 @@
+/* Mesero AR · la conversación vive dentro de model-viewer para seguir visible en la AR. */
+
+:root {
+  --primario: #c4581b;
+  --primario-claro: #f08a4b;
+  --acento: #ffcf9a;
+  --fondo1: #161513;
+  --fondo2: #5a2a12;
+  --tinta: #2a160a;
+  --brillo: color-mix(in srgb, var(--primario) 55%, transparent);
+  --seguro-arriba: env(safe-area-inset-top, 0px);
+  --seguro-abajo: env(safe-area-inset-bottom, 0px);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: var(--fondo1); }
+body { font: 600 16px/1.35 'Baloo 2', system-ui, sans-serif; color: #fff; }
+button, a { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; padding: 0; text-decoration: none; }
+button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid var(--acento); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.icono { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* ── Escenario ────────────────────────────────────────────────────── */
+.escenario {
+  position: fixed; inset: 0; width: 100%; height: 100%;
+  background: radial-gradient(70% 45% at 50% 52%, color-mix(in srgb, var(--primario) 38%, transparent), transparent 75%),
+    linear-gradient(180deg, var(--fondo1) 0%, color-mix(in srgb, var(--fondo1) 60%, var(--fondo2)) 100%);
+  --poster-color: transparent; --progress-bar-color: var(--acento);
+}
+.escenario[ar-status="session-started"] { background: transparent; }
+.ui { position: absolute; inset: 0; pointer-events: none; }
+.ui > *, .pie > *, .zona-bot .columna > * { pointer-events: auto; }
+.pie, .zona-bot, .zona-bot .columna { pointer-events: none; }
+
+/* ── Barra ────────────────────────────────────────────────────────── */
+.barra { position: absolute; top: 0; left: 0; right: 0; display: flex; align-items: center; gap: 10px; padding: calc(var(--seguro-arriba) + 10px) 12px 0; }
+.logo { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.55); }
+.logo.grande { width: 64px; height: 64px; }
+.barra-texto { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.05; }
+.barra-texto strong { font-size: 18px; font-weight: 800; }
+.barra-texto span { font-size: 12.5px; opacity: 0.8; }
+.boton-redondo { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: rgba(0, 0, 0, 0.35); border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.escenario[ar-status="session-started"] .barra { display: none; }
+
+/* ── Cosmo y la burbuja ───────────────────────────────────────────── */
+.zona-bot { position: absolute; left: 0; right: 0; top: calc(var(--seguro-arriba) + 60px); display: flex; gap: 6px; padding: 0 12px 0 4px; }
+.escenario[ar-status="session-started"] .zona-bot { top: calc(var(--seguro-arriba) + 64px); }
+.cosmo { width: min(27vw, 120px); flex: none; }
+.columna { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 6px; padding-top: 4px; }
+.burbuja {
+  max-width: 100%; max-height: 23vh; overflow: auto; scrollbar-width: none; padding: 11px 15px 12px; border-radius: 22px 22px 22px 6px;
+  background: rgba(255, 255, 255, 0.95); color: var(--tinta);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--primario-claro) 70%, transparent), 0 0 26px var(--brillo), 0 10px 26px rgba(0, 0, 0, 0.3);
+  transition: transform 0.25s, opacity 0.25s; transform-origin: 0 100%;
+}
+.burbuja::-webkit-scrollbar { display: none; }
+.burbuja.vacia { transform: scale(0.85); opacity: 0; }
+.titular { margin: 0; font-size: 18.5px; line-height: 1.18; font-weight: 800; }
+.cuerpo { margin: 4px 0 0; font-size: 14.5px; line-height: 1.3; color: #5a3a24; }
+.cuerpo:empty { display: none; }
+.dicho {
+  display: flex; align-items: center; gap: 8px; max-width: 100%; padding: 8px 14px; border-radius: 18px 18px 6px 18px;
+  background: color-mix(in srgb, var(--primario) 85%, #000); color: #fff; font-weight: 800; font-size: 15px;
+  box-shadow: 0 0 18px var(--brillo); animation: entrar 0.25s ease-out;
+}
+.onda { display: none; align-items: center; gap: 3px; height: 20px; }
+.dicho.escuchando .onda { display: inline-flex; }
+.onda i { width: 3px; height: 40%; border-radius: 2px; background: #fff; animation: onda 0.9s ease-in-out infinite; }
+.onda i:nth-child(2) { animation-delay: -0.3s; } .onda i:nth-child(3) { animation-delay: -0.6s; } .onda i:nth-child(4) { animation-delay: -0.15s; } .onda i:nth-child(5) { animation-delay: -0.45s; }
+@keyframes onda { 0%, 100% { height: 25%; } 50% { height: 100%; } }
+@keyframes entrar { from { transform: translateY(-6px); opacity: 0; } }
+
+/* Cosmo animado (SVG de src/mascota.js) */
+.cosmo-svg { display: block; width: 100%; height: auto; overflow: visible; filter: drop-shadow(0 10px 18px rgba(0, 0, 0, 0.45)); }
+.cosmo-svg * { transform-box: view-box; }
+.cz-cuerpo { animation: flotar 3.4s ease-in-out infinite; transform-origin: 110px 150px; }
+.cz-halo, .cz-halo-suave { animation: halo 3.4s ease-in-out infinite; transform-origin: 110px 238px; }
+.cz-aleta-izq { animation: aleta 3.4s ease-in-out infinite; transform-origin: 54px 100px; }
+.cz-aleta-der { animation: aleta 3.4s ease-in-out infinite reverse; transform-origin: 166px 100px; }
+.cz-ojos { animation: parpadeo 5.2s infinite; transform-origin: 110px 114px; }
+.cz-ojos-abiertos, .cz-ojos-guino, .cz-pulgar { display: none; }
+.cz-chispas { opacity: 0; transition: opacity 0.2s; }
+.cz-boca { transform-origin: 110px 131px; }
+.cz-brazo-der { transform-origin: 152px 188px; transition: transform 0.35s cubic-bezier(.3,1.4,.5,1); }
+.cosmo.hablando .cz-boca { animation: hablar 0.17s ease-in-out infinite alternate; }
+.cosmo[data-estado="escuchando"] .cz-ojos-felices, .cosmo[data-estado="pensando"] .cz-ojos-felices, .cosmo[data-estado="guino"] .cz-ojos-felices { display: none; }
+.cosmo[data-estado="escuchando"] .cz-ojos-abiertos { display: inline; }
+.cosmo[data-estado="escuchando"] .cz-oreja { animation: oreja 0.7s ease-in-out infinite alternate; }
+.cosmo[data-estado="pensando"] .cz-ojos-abiertos { display: inline; transform: translate(5px, -6px); }
+.cosmo[data-estado="pensando"] .cz-cuerpo { animation: pensar 1.6s ease-in-out infinite; }
+.cosmo[data-estado="guino"] .cz-ojos-guino { display: inline; }
+.cosmo[data-estado="guino"] .cz-chispas, .cosmo[data-estado="celebra"] .cz-chispas, .cosmo[data-estado="saluda"] .cz-chispas { opacity: 1; animation: chispas 0.5s ease-in-out infinite alternate; }
+.cosmo[data-estado="celebra"] .cz-cuerpo { animation: celebrar 0.7s cubic-bezier(.3,1.5,.5,1) 2, flotar 3.4s ease-in-out 1.4s infinite; }
+.cosmo[data-estado="celebra"] .cz-brazo-der { transform: translate(-6px, -34px) rotate(-28deg); }
+.cosmo[data-estado="celebra"] .cz-pulgar { display: inline; }
+.cosmo[data-estado="saluda"] .cz-brazo-der { animation: saludar 0.45s ease-in-out infinite alternate; }
+@keyframes flotar { 0%, 100% { transform: translateY(0) rotate(-1.6deg); } 50% { transform: translateY(-10px) rotate(1.6deg); } }
+@keyframes halo { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(0.8); opacity: 0.55; } }
+@keyframes aleta { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-7deg); } }
+@keyframes parpadeo { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.08); } }
+@keyframes hablar { from { transform: scaleY(0.35); } to { transform: scale(1.12, 1.3); } }
+@keyframes oreja { to { filter: brightness(1.6); } }
+@keyframes pensar { 0%, 100% { transform: rotate(-6deg) translateY(-4px); } 50% { transform: rotate(-3deg) translateY(-9px); } }
+@keyframes celebrar { 0% { transform: translateY(0); } 40% { transform: translateY(-26px) scale(1.06, 0.96); } 100% { transform: translateY(0); } }
+@keyframes saludar { from { transform: translate(-4px, -30px) rotate(-40deg); } to { transform: translate(-4px, -30px) rotate(-5deg); } }
+@keyframes chispas { from { transform: translate(0, 0); } to { transform: translate(3px, -4px); } }
+
+/* ── Mesa vacía y carga ───────────────────────────────────────────── */
+.vacio { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 14px; text-align: center; width: 80%; pointer-events: none !important; }
+.vacio p { margin: 0; font-weight: 800; opacity: 0.85; }
+.anillo { width: min(58vw, 240px); aspect-ratio: 2.2; border-radius: 50%; border: 3px dashed rgba(255, 255, 255, 0.6); box-shadow: 0 0 30px var(--brillo), inset 0 0 30px var(--brillo); animation: buscar 1.8s ease-in-out infinite; }
+@keyframes buscar { 0%, 100% { transform: scale(0.92); opacity: 0.6; } 50% { transform: scale(1.04); opacity: 1; } }
+.cargando { position: absolute; left: 50%; top: 52%; transform: translate(-50%, -50%); display: grid; justify-items: center; gap: 10px; font-weight: 800; }
+.cargando span { width: 40px; height: 40px; border-radius: 50%; border: 4px solid rgba(255, 255, 255, 0.25); border-top-color: var(--acento); animation: girar 0.8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
+
+/* ── Pie: ficha, botón AR, sugerencias y controles ────────────────── */
+.pie { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; gap: 10px; padding: 0 0 calc(var(--seguro-abajo) + 12px); }
+.ficha { align-self: center; display: flex; align-items: baseline; flex-wrap: wrap; justify-content: center; gap: 2px 8px; max-width: 92%; margin-bottom: 64px; padding: 6px 14px; border-radius: 16px; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.2); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); text-align: center; }
+.sello { font-size: 11.5px; font-weight: 800; padding: 1px 8px; border-radius: 999px; background: var(--acento); color: var(--tinta); }
+.ficha-nombre { font-size: 17px; }
+.ficha-medida { width: 100%; font-size: 12.5px; opacity: 0.8; }
+.ficha-medida:empty { display: none; }
+.escenario[ar-status="session-started"] .ficha { margin-bottom: 0; }
+.chips { display: flex; gap: 8px; overflow-x: auto; padding: 2px 12px; scrollbar-width: none; }
+.chips::-webkit-scrollbar { display: none; }
+.chip { flex: none; min-height: 42px; padding: 7px 15px; border-radius: 999px; font-weight: 800; font-size: 15px; white-space: nowrap; background: rgba(0, 0, 0, 0.45); border: 1px solid rgba(255, 255, 255, 0.32); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); animation: entrar 0.3s ease-out backwards; }
+.chip.primario { background: linear-gradient(135deg, var(--primario), color-mix(in srgb, var(--primario) 60%, #000)); border-color: var(--primario-claro); box-shadow: 0 0 18px var(--brillo); }
+.controles { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 22px; }
+.boton-lateral { justify-self: center; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(0, 0, 0, 0.42); border: 1px solid rgba(255, 255, 255, 0.32); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+.micro { position: relative; width: 74px; height: 74px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: var(--primario); box-shadow: 0 0 0 5px color-mix(in srgb, var(--primario-claro) 75%, transparent), 0 0 30px var(--brillo); }
+.micro .icono { width: 32px; height: 32px; }
+.micro.escuchando { background: var(--primario); color: #fff; }
+.micro.escuchando::before, .micro.escuchando::after { content: ''; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid var(--primario-claro); animation: latido 1.3s ease-out infinite; }
+.micro.escuchando::after { animation-delay: 0.65s; }
+@keyframes latido { from { transform: scale(1); opacity: 0.9; } to { transform: scale(1.55); opacity: 0; } }
+
+/* Botón de AR (slot de model-viewer; se oculta solo si el teléfono no puede) */
+.boton-ar {
+  position: absolute; left: 50%; bottom: calc(var(--seguro-abajo) + 158px); transform: translateX(-50%);
+  display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; min-height: 50px; padding: 0 22px; border-radius: 999px;
+  font-weight: 800; font-size: 17px; color: var(--tinta); background: var(--acento);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.45), 0 8px 26px color-mix(in srgb, var(--acento) 45%, transparent);
+}
+.boton-ar.en-portada { position: static; transform: none; min-height: 56px; padding: 0 40px; font-size: 19px; }
+
+.escribir { position: absolute; left: 10px; right: 10px; bottom: calc(var(--seguro-abajo) + 100px); display: flex; gap: 8px; padding: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.96); box-shadow: 0 0 0 2px var(--primario-claro), 0 0 24px var(--brillo); }
+.escribir input { flex: 1; min-width: 0; border: 0; background: none; padding: 0 12px; font: 700 16px 'Baloo 2', sans-serif; color: var(--tinta); }
+.escribir button { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--primario); color: #fff; }
+.aviso { position: absolute; left: 50%; top: calc(var(--seguro-arriba) + 64px); transform: translateX(-50%); width: max-content; max-width: 90vw; padding: 10px 16px; border-radius: 14px; text-align: center; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.25); }
+
+.etiqueta-3d { display: flex; flex-direction: column; align-items: center; padding: 3px 12px; border-radius: 14px; background: rgba(255, 255, 255, 0.95); color: var(--tinta); line-height: 1.1; box-shadow: 0 0 16px var(--brillo); transform: translateY(-50%); pointer-events: none; }
+.etiqueta-3d b { font-size: 13.5px; white-space: nowrap; }
+
+/* ── Portada ──────────────────────────────────────────────────────── */
+.portada {
+  position: fixed; inset: 0; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; text-align: center;
+  background: radial-gradient(80% 55% at 50% 35%, color-mix(in srgb, var(--primario) 55%, transparent), transparent 70%), linear-gradient(170deg, var(--fondo1), color-mix(in srgb, var(--fondo1) 50%, var(--fondo2)));
+  transition: opacity 0.4s;
+}
+.portada.saliendo { opacity: 0; pointer-events: none; }
+.portada-cosmo { width: min(48vw, 210px); }
+.portada h1 { margin: 0; font-size: clamp(28px, 8vw, 42px); line-height: 1.05; font-weight: 800; }
+.portada p { margin: 0; max-width: 340px; opacity: 0.88; }
+.portada .nota { font-size: 13px; opacity: 0.7; }
+
+@media (min-width: 760px) {
+  .zona-bot { max-width: 640px; margin: 0 auto; }
+  .chips, .controles { width: 100%; max-width: 640px; margin: 0 auto; }
+  .cosmo { width: 120px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}

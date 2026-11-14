@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#161513">
+  <title>Mesero AR</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="mesero.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      }
+    }
+  </script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js"></script>
+</head>
+<body>
+  <!-- Todo va dentro de model-viewer: en la AR de Chrome (WebXR) la conversación sigue visible sobre la cámara. -->
+  <model-viewer id="mv" class="escenario" camera-controls touch-action="pan-y" interaction-prompt="none" auto-rotate
+    rotation-per-second="12deg" shadow-intensity="1.1" shadow-softness="0.85" exposure="1.05" camera-orbit="0deg 58deg auto"
+    ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor">
+    <div class="ui">
+      <header class="barra">
+        <img id="logo" class="logo" alt="">
+        <div class="barra-texto"><strong id="nombre"></strong><span>Mesero en realidad aumentada</span></div>
+        <a id="enlace-carta" class="boton-redondo" aria-label="Ver la carta completa"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/></svg></a>
+        <button id="btn-voz" class="boton-redondo" type="button" aria-pressed="false" aria-label="Silenciar a Cosmo"></button>
+      </header>
+
+      <section class="zona-bot">
+        <div id="cosmo" class="cosmo" data-estado="neutral"></div>
+        <div class="columna">
+          <div id="dicho" class="dicho" hidden><span class="onda" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span><span class="dicho-texto"></span></div>
+          <div id="burbuja" class="burbuja vacia"><p class="titular"></p><p class="cuerpo"></p></div>
+        </div>
+      </section>
+
+      <div id="vacio" class="vacio" aria-hidden="true"><span class="anillo"></span><p>Dime qué se te antoja y te lo pongo aquí</p></div>
+      <div id="cargando" class="cargando" hidden><span></span>Sirviendo…</div>
+
+      <footer class="pie">
+        <div id="ficha" class="ficha" hidden><span class="sello">Escaneo real</span><strong class="ficha-nombre"></strong><small class="ficha-medida"></small></div>
+        <div id="chips" class="chips" role="group" aria-label="Respuestas rápidas"></div>
+        <div class="controles">
+          <button id="btn-teclado" class="boton-lateral" type="button" aria-label="Escribir"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 13h.01M18 13h.01M8 16h8M10 13h4"/></svg></button>
+          <button id="btn-micro" class="micro" type="button" aria-label="Hablar con Cosmo"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0M12 17v5M8 22h8"/></svg></button>
+          <span class="hueco" aria-hidden="true"></span>
+        </div>
+      </footer>
+
+      <form id="escribir" class="escribir" hidden>
+        <input id="entrada" type="text" autocomplete="off" enterkeyhint="send" placeholder="Por ejemplo: tengo hambre, algo ligero" aria-label="Tu mensaje">
+        <button type="submit" aria-label="Enviar"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4z"/><path d="M22 2 11 13"/></svg></button>
+      </form>
+      <div id="aviso" class="aviso" role="status" hidden></div>
+    </div>
+    <button slot="ar-button" id="btn-ar" class="boton-ar" type="button"><svg class="icono" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg>Ver en mi mesa</button>
+  </model-viewer>
+
+  <section id="portada" class="portada">
+    <img id="portada-logo" class="logo grande" alt="">
+    <div id="portada-cosmo" class="cosmo portada-cosmo" data-estado="saluda"></div>
+    <h1>Tu mesero en realidad aumentada</h1>
+    <p>Dile a Cosmo qué se te antoja y mira el plato real, escaneado, sobre tu mesa y a tamaño real.</p>
+    <button id="btn-empezar" class="boton-ar en-portada" type="button">Empezar</button>
+    <p class="nota">Toca el micrófono para hablar o escribe. Mejor en Chrome (Android) o Safari (iPhone).</p>
+  </section>
+  <script type="module" src="src/mesero.js"></script>
+</body>
+</html>
